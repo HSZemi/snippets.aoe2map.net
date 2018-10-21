@@ -86,20 +86,13 @@ if (!isset($_GET['view'])) {
 <script src="js/highlight.js-rms.js"></script>
 <script src="js/highlightjs-line-numbers.min.js"></script>
 <script type="text/javascript">
-    function autoformat() {
-        let oldValue = document.querySelector('#codearea').textContent;
-        document.querySelector('#codearea').textContent = normalizeMap(oldValue);
-    }
-
     function onload() {
-        autoformat();
         hljs.registerLanguage('rmslanguage', rmslanguage);
         hljs.initHighlighting();
     }
 
     addEventListener('DOMContentLoaded', onload, false);
     hljs.initLineNumbersOnLoad();
-
 </script>
 </body>
 </html>

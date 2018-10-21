@@ -1,5 +1,7 @@
 RewriteEngine On
 RewriteRule ^index\.php$ - [L]
+RewriteRule ^css/.*$ - [L]
+RewriteRule ^js/.*$ - [L]
 RewriteRule ^([A-Za-z0-9]+)$  index.php?view=$1 [L]
 RewriteRule ^edit/([A-Za-z0-9]+)$  index.php?edit=$1 [L]
 RewriteRule ^$ index.php [L]

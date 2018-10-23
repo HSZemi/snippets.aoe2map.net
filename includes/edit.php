@@ -1,43 +1,71 @@
 <?php
+include 'functions.php';
 $db = null;
 $title = 'TITLE';
 $snippet = 'SNIPPET';
 $url_private = 'URL_PRIVATE';
 $url_public = 'URL_PUBLIC';
 $updated = false;
+$new_snippet = false;
 if (!isset($_GET['edit'])) {
     http_response_code(404);
     die('Not found');
 } else {
+    $url_private = $_GET['edit'];
+    if ($url_private === "new") {
+        $new_snippet = true;
+    }
     try {
         $db = new SQLite3("data/db.sqlite");
 
         if (isset($_POST['titleInput']) && isset($_POST['rmsInput'])) {
-            $updateStatement = $db->prepare("UPDATE snippets SET title=:title, snippet=:snippet WHERE url_private=:url_private");
-            $updateStatement->bindValue(':title', $_POST['titleInput']);
-            $updateStatement->bindValue(':snippet', $_POST['rmsInput']);
-            $updateStatement->bindValue(':url_private', $_GET['edit']);
-            $updated = $updateStatement->execute();
-        }
+            if ($new_snippet) {
+                $url_private = getNewPrivateUrl($db);
+                $url_public = getNewPublicUrl($db);
 
-        $statement = $db->prepare("SELECT title, snippet, url_private, url_public FROM snippets WHERE url_private=:url_private");
-        $statement->bindValue(':url_private', $_GET['edit']);
-        $result = $statement->execute();
-        if ($result !== false) {
-            $row = $result->fetchArray(SQLITE3_ASSOC);
-            if ($row === false) {
-                http_response_code(404);
-                die('Not found');
+                $insertStatement = $db->prepare("INSERT INTO snippets(title, snippet, url_private, url_public) VALUES (:title, :snippet, :url_private, :url_public)");
+                $insertStatement->bindValue(':title', $_POST['titleInput']);
+                $insertStatement->bindValue(':snippet', $_POST['rmsInput']);
+                $insertStatement->bindValue(':url_private', $url_private);
+                $insertStatement->bindValue(':url_public', $url_public);
+                $inserted = $insertStatement->execute();
+                if ($inserted !== false) {
+                    header("Location: ./$url_private", true, 303);
+                    die();
+                }
             } else {
-                $result->finalize();
-
-                $title = $row['title'];
-                $snippet = $row['snippet'];
-                $url_public = $row['url_public'];
-                $url_private = $row['url_private'];
+                $updateStatement = $db->prepare("UPDATE snippets SET title=:title, snippet=:snippet WHERE url_private=:url_private");
+                $updateStatement->bindValue(':title', $_POST['titleInput']);
+                $updateStatement->bindValue(':snippet', $_POST['rmsInput']);
+                $updateStatement->bindValue(':url_private', $url_private);
+                $updated = $updateStatement->execute();
             }
         }
-    } catch (Exception $e) {
+
+        if ($new_snippet) {
+            $title = "";
+            $snippet = "";
+        } else {
+            $statement = $db->prepare("SELECT title, snippet, url_private, url_public FROM snippets WHERE url_private=:url_private");
+            $statement->bindValue(':url_private', $_GET['edit']);
+            $result = $statement->execute();
+            if ($result !== false) {
+                $row = $result->fetchArray(SQLITE3_ASSOC);
+                if ($row === false) {
+                    http_response_code(404);
+                    die('Not found');
+                } else {
+                    $result->finalize();
+
+                    $title = $row['title'];
+                    $snippet = $row['snippet'];
+                    $url_public = $row['url_public'];
+                    $url_private = $row['url_private'];
+                }
+            }
+        }
+    } catch
+    (Exception $e) {
         echo $e;
     } finally {
         if ($db !== null) {
@@ -93,33 +121,40 @@ if (!isset($_GET['edit'])) {
         </div>
         <div class="card-body">
 
-            <div class="input-group mb-3">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">Public sharing URL</span>
-                </div>
-                <input type="text" class="form-control" aria-label="Public URL" aria-describedby="copyPublicUrlButton"
-                       id="publicUrlInput" value="https://snippets.aoe2map.net/<?php echo $url_public; ?>" disabled>
-                <div class="input-group-append">
-                    <a class="btn btn-secondary" type="button" href="../<?php echo $url_public; ?>" target="_blank">Open</a>
-                </div>
-                <div class="input-group-append">
-                    <button class="btn btn-secondary" type="button" id="copyPublicUrlButton">Copy</button>
-                </div>
-            </div>
+            <?php if (!$new_snippet) { ?>
 
-            <div class="input-group mb-3">
-                <div class="input-group-prepend">
-                    <span class="input-group-text text-danger">Secret edit URL</span>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Public sharing URL</span>
+                    </div>
+                    <input type="text" class="form-control" aria-label="Public URL"
+                           aria-describedby="copyPublicUrlButton"
+                           id="publicUrlInput" value="https://snippets.aoe2map.net/<?php echo $url_public; ?>" disabled>
+                    <div class="input-group-append">
+                        <a class="btn btn-secondary" type="button" href="../<?php echo $url_public; ?>"
+                           target="_blank">Open</a>
+                    </div>
+                    <div class="input-group-append">
+                        <button class="btn btn-secondary" type="button" id="copyPublicUrlButton">Copy</button>
+                    </div>
                 </div>
-                <input type="text" class="form-control" aria-label="Private URL" aria-describedby="copyPrivateUrlButton"
-                       id="privateUrlInput" value="https://snippets.aoe2map.net/edit/<?php echo $url_private; ?>"
-                       disabled>
-                <div class="input-group-append">
-                    <button class="btn btn-secondary" type="button" id="copyPrivateUrlButton">Copy</button>
-                </div>
-            </div>
 
-            <hr>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text text-danger">Secret edit URL</span>
+                    </div>
+                    <input type="text" class="form-control" aria-label="Private URL"
+                           aria-describedby="copyPrivateUrlButton"
+                           id="privateUrlInput" value="https://snippets.aoe2map.net/edit/<?php echo $url_private; ?>"
+                           disabled>
+                    <div class="input-group-append">
+                        <button class="btn btn-secondary" type="button" id="copyPrivateUrlButton">Copy</button>
+                    </div>
+                </div>
+
+                <hr>
+
+            <?php } ?>
 
             <div class="card-text">
 
@@ -157,7 +192,8 @@ if (!isset($_GET['edit'])) {
                             <a class="nav-link" id="tabPreview" href="#">Preview</a>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link btn btn-secondary" id="tabAutoformat" type="button">Autoformat</button>
+                            <button class="nav-link btn btn-secondary" id="tabAutoformat" type="button">Autoformat
+                            </button>
                         </li>
                     </ul>
 
@@ -211,23 +247,29 @@ if (!isset($_GET['edit'])) {
         document.querySelector('#preview').style.display = 'none';
     });
 
-    document.querySelector('#copyPublicUrlButton').addEventListener('click', function () {
-        copyToClipboard(document.querySelector('#publicUrlInput').value);
-        document.querySelector('#copyPublicUrlButton').innerHTML = 'Copied!';
-        setTimeout(function () {
-            document.querySelector('#copyPublicUrlButton').innerHTML = 'Copy';
-        }, 1500);
-    });
+    let copyPublicUrlButton = document.querySelector('#copyPublicUrlButton');
+    if (copyPublicUrlButton !== null) {
+        copyPublicUrlButton.addEventListener('click', function () {
+            copyToClipboard(document.querySelector('#publicUrlInput').value);
+            document.querySelector('#copyPublicUrlButton').innerHTML = 'Copied!';
+            setTimeout(function () {
+                document.querySelector('#copyPublicUrlButton').innerHTML = 'Copy';
+            }, 1500);
+        });
+    }
 
-    document.querySelector('#copyPrivateUrlButton').addEventListener('click', function () {
-        copyToClipboard(document.querySelector('#privateUrlInput').value);
-        document.querySelector('#copyPrivateUrlButton').innerHTML = 'Copied!';
-        setTimeout(function () {
-            document.querySelector('#copyPrivateUrlButton').innerHTML = 'Copy';
-        }, 1500);
-    });
+    let copyPrivateUrlButton = document.querySelector('#copyPrivateUrlButton');
+    if (copyPrivateUrlButton !== null) {
+        copyPrivateUrlButton.addEventListener('click', function () {
+            copyToClipboard(document.querySelector('#privateUrlInput').value);
+            document.querySelector('#copyPrivateUrlButton').innerHTML = 'Copied!';
+            setTimeout(function () {
+                document.querySelector('#copyPrivateUrlButton').innerHTML = 'Copy';
+            }, 1500);
+        });
+    }
 
-    document.querySelector('#tabAutoformat').addEventListener('click', function(){
+    document.querySelector('#tabAutoformat').addEventListener('click', function () {
         autoformat();
     });
 

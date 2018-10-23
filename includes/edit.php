@@ -87,7 +87,7 @@ if (!isset($_GET['edit'])) {
     <div class="card mt-4 mb-4">
         <div class="card-header text-center">
             <h1>
-                <a href="./">snippets.aoe2map.net</a>
+                <a href="../">snippets.aoe2map.net</a>
             </h1>
             <p class="lead">Share Age of Empires 2 Random Map Script snippets online</p>
         </div>

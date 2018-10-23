@@ -203,7 +203,7 @@ if (!isset($_GET['edit'])) {
                                       rows="20"><?php echo htmlspecialchars($snippet); ?></textarea>
                         </div>
                     </div>
-                    <div class="tab-content" id="preview">
+                    <div class="tab-content" id="preview" style="display: none;">
                         <pre><code class="rms" id="codearea"></code></pre>
                     </div>
                 </form>
@@ -222,12 +222,12 @@ if (!isset($_GET['edit'])) {
     }
 
     hljs.registerLanguage('rmslanguage', rmslanguage);
-    hljs.initLineNumbersOnLoad();
 
     function updatePreviewArea() {
         let codearea = document.querySelector('#codearea');
         codearea.textContent = document.querySelector('#rmsInput').value;
         hljs.highlightBlock(codearea);
+        hljs.lineNumbersBlock(codearea, {singleLine: true});
     }
 
     document.querySelector('#tabPreview').addEventListener('click', function (e) {

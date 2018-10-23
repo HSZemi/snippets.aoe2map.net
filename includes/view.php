@@ -61,6 +61,10 @@ if (!isset($_GET['view'])) {
             padding-right: 1rem;
             color: gray;
         }
+
+        #codearea {
+            min-height: 4rem;
+        }
     </style>
 </head>
 <body>
@@ -89,10 +93,10 @@ if (!isset($_GET['view'])) {
     function onload() {
         hljs.registerLanguage('rmslanguage', rmslanguage);
         hljs.initHighlighting();
+        hljs.lineNumbersBlock(document.getElementById('codearea'), {singleLine: true});
     }
 
     addEventListener('DOMContentLoaded', onload, false);
-    hljs.initLineNumbersOnLoad();
 </script>
 </body>
 </html>

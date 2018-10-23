@@ -37,8 +37,10 @@ function rmslanguage(hljs) {
 function normalizeMap(mapcontent) {
     mapcontent = mapcontent.replace(/#include_drs\s+random_map.def/g, "#include_drsrandom_mapdef");
     let commentMatches = mapcontent.match(/\n?\/\*.*?\*\//g);
-    for (let i = 0; i < commentMatches.length; i++) {
-        mapcontent = mapcontent.replace(commentMatches[i], `§comment§${i}§`);
+    if (commentMatches !== null) {
+        for (let i = 0; i < commentMatches.length; i++) {
+            mapcontent = mapcontent.replace(commentMatches[i], `§comment§${i}§`);
+        }
     }
     mapcontent = mapcontent.replace(/\r?\n/g, " ");
     mapcontent = mapcontent.replace(/\s+/g, " ");
@@ -46,8 +48,10 @@ function normalizeMap(mapcontent) {
     mapcontent = mapcontent.replace(/#/g, "\n#");
     mapcontent = mapcontent.replace(/\{/g, "\n{");
     mapcontent = mapcontent.replace(/\}/g, "\n}\n");
-    for (let i = 0; i < commentMatches.length; i++) {
-        mapcontent = mapcontent.replace(`§comment§${i}§`, commentMatches[i]);
+    if (commentMatches !== null) {
+        for (let i = 0; i < commentMatches.length; i++) {
+            mapcontent = mapcontent.replace(`§comment§${i}§`, commentMatches[i]);
+        }
     }
     mapcontent = mapcontent.replace(/\s+\*\//g, " */");
     mapcontent = mapcontent.replace(/ \n/g, "\n");

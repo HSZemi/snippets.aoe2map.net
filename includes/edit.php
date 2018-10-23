@@ -34,7 +34,7 @@ if (!isset($_GET['edit'])) {
                     die();
                 }
             } else {
-                $updateStatement = $db->prepare("UPDATE snippets SET title=:title, snippet=:snippet WHERE url_private=:url_private");
+                $updateStatement = $db->prepare("UPDATE snippets SET title=:title, snippet=:snippet, updated=CURRENT_TIMESTAMP WHERE url_private=:url_private");
                 $updateStatement->bindValue(':title', $_POST['titleInput']);
                 $updateStatement->bindValue(':snippet', $_POST['rmsInput']);
                 $updateStatement->bindValue(':url_private', $url_private);

@@ -16,7 +16,9 @@ try {
 `title` VARCHAR(255) NOT NULL,
 `url_public` VARCHAR(127) NOT NULL UNIQUE,
 `url_private` VARCHAR(127) NOT NULL UNIQUE,
-`snippet` TEXT NOT NULL
+`snippet` TEXT NOT NULL,
+`created` DATETIME DEFAULT CURRENT_TIMESTAMP,
+`updated` DATETIME DEFAULT CURRENT_TIMESTAMP
 )");
 
     echo "OK";

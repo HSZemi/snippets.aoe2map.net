@@ -1,0 +1,6 @@
+.idea
+.directory
+venv
+output
+*.log
+config.py

@@ -1,0 +1,72 @@
+#const TRADECART 128
+
+<PLAYER_SETUP>
+
+random_placement
+effect_amount SET_ATTRIBUTE TRADECART ATTR_WOOD_COST 10
+
+
+<LAND_GENERATION>
+
+base_terrain DIRT
+create_player_lands
+{
+    terrain_type DIRT
+    border_fuzziness 99
+    clumping_factor 30
+    number_of_tiles 1000
+    top_border 5
+    left_border 5
+    bottom_border 5
+    right_border 5
+    other_zone_avoidance_distance 99
+}
+
+
+<OBJECTS_GENERATION>
+
+create_object TOWN_CENTER
+{
+    set_place_for_every_player
+    group_placement_radius 1
+    min_distance_to_players 0
+    max_distance_to_players 0
+    min_distance_group_placement 2
+}
+
+if REGICIDE
+    create_object KING
+    {
+        set_place_for_every_player
+        min_distance_to_players 6
+        max_distance_to_players 7
+    }
+    
+endif
+
+create_object MARKET
+{
+    set_place_for_every_player
+    group_placement_radius 1
+    min_distance_to_players 7
+    max_distance_to_players 10
+    min_distance_group_placement 6
+}
+
+create_object TRADECART
+{
+    number_of_objects 10
+    set_place_for_every_player
+    min_distance_to_players 2
+    max_distance_to_players 10
+}
+
+create_object HOUSE
+{
+    number_of_objects 1
+    set_place_for_every_player
+    group_placement_radius 6
+    min_distance_to_players 8
+    max_distance_to_players 12
+    min_distance_group_placement 6
+}

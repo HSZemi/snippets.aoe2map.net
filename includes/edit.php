@@ -1,12 +1,13 @@
 <?php
 include 'functions.php';
 $db = null;
-$title = 'TITLE';
-$snippet = 'SNIPPET';
+$title = '';
+$snippet = '';
 $url_private = 'URL_PRIVATE';
 $url_public = 'URL_PUBLIC';
 $updated = false;
 $new_snippet = false;
+$error_content_empty = false;
 if (!isset($_GET['edit'])) {
     http_response_code(404);
     die('Not found');
@@ -19,12 +20,19 @@ if (!isset($_GET['edit'])) {
         $db = new SQLite3("data/db.sqlite");
 
         if (isset($_POST['titleInput']) && isset($_POST['rmsInput'])) {
-            if ($new_snippet) {
+            $title = $_POST['titleInput'];
+            $content = $_POST['rmsInput'];
+            if ($content === '') {
+                $error_content_empty = true;
+            } elseif ($new_snippet) {
                 $url_private = getNewPrivateUrl($db);
                 $url_public = getNewPublicUrl($db);
 
+                if ($title === '') {
+                    $title = $url_public;
+                }
                 $insertStatement = $db->prepare("INSERT INTO snippets(title, snippet, url_private, url_public) VALUES (:title, :snippet, :url_private, :url_public)");
-                $insertStatement->bindValue(':title', $_POST['titleInput']);
+                $insertStatement->bindValue(':title', $title);
                 $insertStatement->bindValue(':snippet', $_POST['rmsInput']);
                 $insertStatement->bindValue(':url_private', $url_private);
                 $insertStatement->bindValue(':url_public', $url_public);
@@ -35,17 +43,18 @@ if (!isset($_GET['edit'])) {
                 }
             } else {
                 $updateStatement = $db->prepare("UPDATE snippets SET title=:title, snippet=:snippet, updated=CURRENT_TIMESTAMP WHERE url_private=:url_private");
-                $updateStatement->bindValue(':title', $_POST['titleInput']);
+                if ($title === '') {
+                    $updateStatement = $db->prepare("UPDATE snippets SET title=url_public, snippet=:snippet, updated=CURRENT_TIMESTAMP WHERE url_private=:url_private");
+                } else {
+                    $updateStatement->bindValue(':title', $title);
+                }
                 $updateStatement->bindValue(':snippet', $_POST['rmsInput']);
                 $updateStatement->bindValue(':url_private', $url_private);
                 $updated = $updateStatement->execute();
             }
         }
 
-        if ($new_snippet) {
-            $title = "";
-            $snippet = "";
-        } else {
+        if (!$new_snippet) {
             $statement = $db->prepare("SELECT title, snippet, url_private, url_public FROM snippets WHERE url_private=:url_private");
             $statement->bindValue(':url_private', $_GET['edit']);
             $result = $statement->execute();
@@ -129,7 +138,7 @@ if (!isset($_GET['edit'])) {
                     </div>
                     <input type="text" class="form-control" aria-label="Public URL"
                            aria-describedby="copyPublicUrlButton"
-                           id="publicUrlInput" value="https://snippets.aoe2map.net/<?php echo $url_public; ?>" disabled>
+                           id="publicUrlInput" value="https://snippets.aoe2map.net/<?php echo $url_public; ?>" readonly>
                     <div class="input-group-append">
                         <a class="btn btn-secondary" type="button" href="../<?php echo $url_public; ?>"
                            target="_blank">Open</a>
@@ -146,7 +155,7 @@ if (!isset($_GET['edit'])) {
                     <input type="text" class="form-control" aria-label="Private URL"
                            aria-describedby="copyPrivateUrlButton"
                            id="privateUrlInput" value="https://snippets.aoe2map.net/edit/<?php echo $url_private; ?>"
-                           disabled>
+                           readonly>
                     <div class="input-group-append">
                         <button class="btn btn-secondary" type="button" id="copyPrivateUrlButton">Copy</button>
                     </div>
@@ -166,6 +175,14 @@ if (!isset($_GET['edit'])) {
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
+                <?php } elseif ($error_content_empty) { ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Ayayay!</strong> Your snippet has no content. You should fix that.
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"
+                                onclick="this.parentNode.parentNode.removeChild(this.parentNode)">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
                 <?php } ?>
 
                 <form method="POST">
@@ -179,7 +196,8 @@ if (!isset($_GET['edit'])) {
                             </div>
                         </div>
                         <div class="col-2">
-                            <button type="submit" class="btn btn-lg btn-block btn-primary" style="height: 100%;">Save
+                            <button type="submit" id="btn-save" class="btn btn-lg btn-block btn-primary"
+                                    style="height: 100%;">Save
                             </button>
                         </div>
                     </div>

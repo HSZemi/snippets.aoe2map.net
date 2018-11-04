@@ -26,7 +26,7 @@
         <h1 class="display-4">snippets.aoe2map.net</h1>
         <p class="lead">Share Age of Empires 2 Random Map Script snippets online</p>
         <hr class="my-4">
-        <a class="btn btn-primary btn-lg" href="./edit/new">New Snippet…</a>
+        <a class="btn btn-primary btn-lg" href="./edit/new" id="a-new-snippet">New Snippet…</a>
     </div>
 </div>
 </body>

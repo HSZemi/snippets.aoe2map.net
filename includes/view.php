@@ -66,6 +66,26 @@ if (!isset($_GET['view'])) {
             min-height: 4rem;
         }
     </style>
+
+    <!-- Facebook Open Graph -->
+    <meta property="og:locale" content="en_GB"/>
+    <meta property="og:site_name" content="snippets.aoe2map.net"/>
+    <meta property="og:title" content="<?php echo htmlspecialchars($title); ?>"/>
+    <meta property="og:url" content="https://snippets.aoe2map.net/<?php echo $url_public; ?>"/>
+    <meta property="og:type" content="article"/>
+    <meta property="og:description"
+          content="<?php echo htmlspecialchars($title); ?> – a Age of Empires II Random Map Script snippet"/>
+    <!-- Google+ / Schema.org -->
+    <meta itemprop="name" content="<?php echo htmlspecialchars($title); ?>"/>
+    <meta itemprop="headline" content="<?php echo htmlspecialchars($title); ?>"/>
+    <meta itemprop="description"
+          content="<?php echo htmlspecialchars($title); ?> – a Age of Empires II Random Map Script snippet"/>
+    <!-- Twitter Cards -->
+    <meta name="twitter:title" content="<?php echo htmlspecialchars($title); ?>"/>
+    <meta name="twitter:url" content="https://snippets.aoe2map.net/<?php echo $url_public; ?>"/>
+    <meta name="twitter:description"
+          content="<?php echo htmlspecialchars($title); ?> – a Age of Empires II Random Map Script snippet"/>
+    <meta name="twitter:card" content="summary"/>
 </head>
 <body>
 <div class="container">

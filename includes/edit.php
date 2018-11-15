@@ -8,6 +8,7 @@ $url_public = 'URL_PUBLIC';
 $updated = false;
 $new_snippet = false;
 $error_content_empty = false;
+$public = '';
 if (!isset($_GET['edit'])) {
     http_response_code(404);
     die('Not found');
@@ -22,6 +23,7 @@ if (!isset($_GET['edit'])) {
         if (isset($_POST['titleInput']) && isset($_POST['rmsInput'])) {
             $title = $_POST['titleInput'];
             $content = $_POST['rmsInput'];
+            $public = isset($_POST['publiclyAvailableCheckbox']) ? 1 : 0;
             if ($content === '') {
                 $error_content_empty = true;
             } elseif ($new_snippet) {
@@ -31,31 +33,33 @@ if (!isset($_GET['edit'])) {
                 if ($title === '') {
                     $title = $url_public;
                 }
-                $insertStatement = $db->prepare("INSERT INTO snippets(title, snippet, url_private, url_public) VALUES (:title, :snippet, :url_private, :url_public)");
+                $insertStatement = $db->prepare("INSERT INTO snippets(title, snippet, url_private, url_public, public) VALUES (:title, :snippet, :url_private, :url_public, :public)");
                 $insertStatement->bindValue(':title', $title);
                 $insertStatement->bindValue(':snippet', $_POST['rmsInput']);
                 $insertStatement->bindValue(':url_private', $url_private);
                 $insertStatement->bindValue(':url_public', $url_public);
+                $insertStatement->bindValue(':public', $public);
                 $inserted = $insertStatement->execute();
                 if ($inserted !== false) {
                     header("Location: ./$url_private", true, 303);
                     die();
                 }
             } else {
-                $updateStatement = $db->prepare("UPDATE snippets SET title=:title, snippet=:snippet, updated=CURRENT_TIMESTAMP WHERE url_private=:url_private");
+                $updateStatement = $db->prepare("UPDATE snippets SET title=:title, snippet=:snippet, public=:public, updated=CURRENT_TIMESTAMP WHERE url_private=:url_private");
                 if ($title === '') {
-                    $updateStatement = $db->prepare("UPDATE snippets SET title=url_public, snippet=:snippet, updated=CURRENT_TIMESTAMP WHERE url_private=:url_private");
+                    $updateStatement = $db->prepare("UPDATE snippets SET title=url_public, snippet=:snippet, public=:public, updated=CURRENT_TIMESTAMP WHERE url_private=:url_private");
                 } else {
                     $updateStatement->bindValue(':title', $title);
                 }
                 $updateStatement->bindValue(':snippet', $_POST['rmsInput']);
                 $updateStatement->bindValue(':url_private', $url_private);
+                $updateStatement->bindValue(':public', $public);
                 $updated = $updateStatement->execute();
             }
         }
 
         if (!$new_snippet) {
-            $statement = $db->prepare("SELECT title, snippet, url_private, url_public FROM snippets WHERE url_private=:url_private");
+            $statement = $db->prepare("SELECT title, snippet, url_private, url_public, public FROM snippets WHERE url_private=:url_private");
             $statement->bindValue(':url_private', $_GET['edit']);
             $result = $statement->execute();
             if ($result !== false) {
@@ -70,6 +74,7 @@ if (!isset($_GET['edit'])) {
                     $snippet = $row['snippet'];
                     $url_public = $row['url_public'];
                     $url_private = $row['url_private'];
+                    $public = $row['public'] === 0 ? '' : ' checked';
                 }
             }
         }
@@ -212,6 +217,14 @@ if (!isset($_GET['edit'])) {
                         <li class="nav-item">
                             <button class="nav-link btn btn-secondary" id="tabAutoformat" type="button">Autoformat
                             </button>
+                        </li>
+                        <li class="nav-item">
+                            <div class="custom-control custom-checkbox my-2 ml-3">
+                                <input type="checkbox" class="custom-control-input" id="publiclyAvailableCheckbox"
+                                       name="publiclyAvailableCheckbox"<?php echo $public; ?>>
+                                <label class="custom-control-label" for="publiclyAvailableCheckbox">List this snippet on
+                                    main page</label>
+                            </div>
                         </li>
                     </ul>
 

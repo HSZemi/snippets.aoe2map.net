@@ -3,6 +3,7 @@ import re
 import unittest
 
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 
 from config import PAGE
 
@@ -26,7 +27,7 @@ def get_private_id_from_url(url):
     return m.group(1)
 
 
-def get_public_id_from_url(url):
+def get_id_from_url(url):
     return url.split('/')[-1]
 
 
@@ -44,7 +45,8 @@ class FullCycleTest(unittest.TestCase):
     def test_check_validation_files(self):
         self.driver.get(PAGE)
         self.assertIn("snippets.aoe2map.net", self.driver.title)
-        self.compareWithValidationFile('index')
+        self.compareWithValidationFile('index',
+                                       [lambda x: re.sub('<ul.+/ul>', '<ul>[masked]</ul>', x, flags=re.DOTALL)])
         self.click_page_link('a-new-snippet', 'Snippet Title')
         self.compareWithValidationFile('new')
 
@@ -64,7 +66,7 @@ class FullCycleTest(unittest.TestCase):
         self.assert_input_value('rmsInput', trade_cart_nothing)
         self.assert_edit_url_is_current_url()
         public_url = self.get_public_url()
-        public_id = get_public_id_from_url(public_url)
+        public_id = get_id_from_url(public_url)
         self.driver.get(PAGE + public_id)
         self.compareWithValidationFile('public_page', [lambda x: x.replace(public_id, '[masked]')])
 
@@ -83,11 +85,12 @@ class FullCycleTest(unittest.TestCase):
             'titleInput': '',
             'rmsInput': trade_cart_nothing,
         })
+        self.check_checkbox('publiclyAvailableCheckbox')
 
         # THEN
         self.click_page_link('btn-save', 'Public sharing URL')
         public_url = self.get_public_url()
-        public_id = get_public_id_from_url(public_url)
+        public_id = get_id_from_url(public_url)
         self.assert_input_value('titleInput', public_id)
 
         # WHEN
@@ -107,8 +110,41 @@ class FullCycleTest(unittest.TestCase):
         # THEN
         self.click_page_link('btn-save', 'Public sharing URL')
         public_url = self.get_public_url()
-        public_id = get_public_id_from_url(public_url)
+        public_id = get_id_from_url(public_url)
         self.assert_input_value('titleInput', public_id)
+
+    def test_public_and_nonpublic_snippet(self):
+        snippet_title = "test_public_and_nonpublic_snippet_title"
+
+        # GIVEN
+        self.driver.get(PAGE)
+        self.assertIn("snippets.aoe2map.net", self.driver.title)
+        self.assertNotIn("Public sharing URL", self.driver.page_source)
+        self.assertNotIn(snippet_title, self.driver.page_source)
+        self.click_page_link('a-new-snippet', 'Snippet Title')
+        trade_cart_nothing = tcn()
+
+        # WHEN
+        self.fill_fields({
+            'titleInput': snippet_title,
+            'rmsInput': trade_cart_nothing,
+        })
+        self.check_checkbox('publiclyAvailableCheckbox')
+
+        # THEN
+        self.click_page_link('btn-save', 'Public sharing URL')
+        private_url = self.get_private_url()
+        private_id = get_id_from_url(private_url)
+
+        self.driver.get(PAGE)
+        self.assertIn(snippet_title, self.driver.page_source)
+
+        self.driver.get(PAGE + "edit/" + private_id)
+        self.uncheck_checkbox('publiclyAvailableCheckbox')
+        self.click_page_link('btn-save', 'Public sharing URL')
+
+        self.driver.get(PAGE)
+        self.assertNotIn(snippet_title, self.driver.page_source)
 
     def test_empty_content_yields_an_error(self):
 
@@ -168,6 +204,20 @@ class FullCycleTest(unittest.TestCase):
         link.click()
         self.assertIn(content, self.driver.page_source)
 
+    def check_checkbox(self, element_id):
+        checkbox = self.toggle_checkbox(element_id)
+        self.assertTrue(checkbox.is_selected())
+
+    def uncheck_checkbox(self, element_id):
+        checkbox = self.toggle_checkbox(element_id)
+        self.assertFalse(checkbox.is_selected())
+
+    def toggle_checkbox(self, element_id):
+        checkbox = self.driver.find_element_by_id(element_id)
+        self.scroll_to(checkbox)
+        checkbox.send_keys(Keys.SPACE)
+        return checkbox
+
     def scroll_to(self, link):
         self.driver.execute_script("arguments[0].scrollIntoView();", link)
 
@@ -200,6 +250,9 @@ class FullCycleTest(unittest.TestCase):
 
     def get_public_url(self):
         return self.driver.find_element_by_id('publicUrlInput').get_attribute('value')
+
+    def get_private_url(self):
+        return self.driver.find_element_by_id('privateUrlInput').get_attribute('value')
 
     def assert_edit_url_is_current_url(self):
         private_url_from_input = self.driver.find_element_by_id('privateUrlInput').get_attribute('value')

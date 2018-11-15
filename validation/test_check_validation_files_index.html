@@ -15,6 +15,11 @@
             flex-direction: column;
             justify-content: center;
         }
+
+        #btn-show-snippets,
+        #linklist a {
+            color: silver;
+        }
     </style>
 </head>
 <body>
@@ -24,8 +29,30 @@
         <h1 class="display-4">snippets.aoe2map.net</h1>
         <p class="lead">Share Age of Empires 2 Random Map Script snippets online</p>
         <hr class="my-4">
-        <a class="btn btn-primary btn-lg" href="./edit/new" id="a-new-snippet">New Snippet…</a>
+        <div>
+            <a class="btn btn-primary btn-lg" href="./edit/new" id="a-new-snippet">New Snippet…</a>
+        </div>
+
+        <div>
+            <button class="btn btn-link mt-4" id="btn-show-snippets">Show Snippets</button>
+        </div>
+
+        <div class="text-left" id="linklist" style="display: none;">
+            <ul>[masked]</ul>
+        </div>
     </div>
 </div>
+<script type="text/javascript">
+    let linklist = document.getElementById('linklist');
+    let button = document.getElementById('btn-show-snippets');
+    linklist.style.display = 'none';
+    button.addEventListener('click', function () {
+        if (linklist.style.display === 'none') {
+            linklist.style.display = 'block';
+        } else {
+            linklist.style.display = 'none';
+        }
+    });
+</script>
 
 </body></html>

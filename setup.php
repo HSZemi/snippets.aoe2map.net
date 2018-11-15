@@ -11,7 +11,7 @@
 <?php
 try {
     $db = new SQLite3("data/db.sqlite");
-    $db->exec("CREATE TABLE snippets(
+    $db->exec("CREATE TABLE IF NOT EXISTS snippets(
 `id` INTEGER PRIMARY KEY,
 `title` VARCHAR(255) NOT NULL,
 `url_public` VARCHAR(127) NOT NULL UNIQUE,
@@ -20,10 +20,34 @@ try {
 `created` DATETIME DEFAULT CURRENT_TIMESTAMP,
 `updated` DATETIME DEFAULT CURRENT_TIMESTAMP
 )");
+    $db->exec("CREATE TABLE IF NOT EXISTS  versions(
+`id` INTEGER PRIMARY KEY,
+`version` INTEGER NOT NULL,
+`updated` DATETIME DEFAULT CURRENT_TIMESTAMP
+)");
 
+    $result = $db->query("SELECT MAX(version) FROM versions");
+    if ($result === false) {
+        throw new Exception("ERROR querying versions table");
+    } else {
+        $row = $result->fetchArray();
+        $currentVersion = 0;
+        if ($row[0] === null) {
+            $db->exec("INSERT INTO versions(version) VALUES (0)");
+        } else {
+            $currentVersion = $row[0];
+        }
+
+        if ($currentVersion < 1) {
+            $db->exec("ALTER TABLE snippets ADD COLUMN public BOOLEAN NOT NULL DEFAULT 0 CHECK (public IN (0,1))");
+            $db->exec("INSERT INTO versions(version) VALUES (1)");
+        }
+    }
     echo "OK";
 } catch (Exception $e) {
     echo $e;
+} finally {
+    $db->close();
 }
 
 ?>
